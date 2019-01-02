@@ -9,7 +9,7 @@ namespace org {
         template <typename T>
         class optional {
         public:
-            optional(T const &value) :_M_present(true), _M_data(value) { }
+            explicit optional(T const &value, bool present = true) :_M_present(present), _M_data(value) { }
 
             optional() :_M_present(false) { }
 

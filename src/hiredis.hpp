@@ -45,8 +45,27 @@ namespace org {
             int hincrby(std::string const &key, std::string const &field, int delta);
 
             int incrby(std::string const &key, int delta);
+
+            int ttl(std::string const &key);
+
+            optional<std::string> lpop(std::string const &key);
+
+            int lpush(std::string const &key, std::string const &value);
+
+            int lpushx(std::string const &key, std::string const &value);
+
+            optional<std::string> rpop(std::string const &key);
+
+            int rpush(std::string const &key, std::string const &value);
+
+            int rpushx(std::string const &key, std::string const &value);
+
+            int llen(std::string const &key);
+
+        protected:
+            ::redisReply* command(char const *fmt, ...);
         private:
-            redisContext *_M_ctx;
+            ::redisContext *_M_ctx;
         public:
             static std::string const OK;
         };
