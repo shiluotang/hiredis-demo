@@ -6,6 +6,8 @@
 #include <stdexcept>
 #include <cstdarg>
 
+#include <iostream>
+
 #include "misc.hpp"
 #include "hiredis.hpp"
 
@@ -265,6 +267,18 @@ namespace org {
             if (r.isError())
                 throw std::runtime_error(r.str());
             return static_cast<int>(r->integer);
+        }
+
+        long hiredis::scan(long cursor, std::string const &pattern, int count) {
+            reply r(command("SCAN %ld MATCH %s COUNT %d", cursor, pattern.c_str(), count));
+            if (r.isError())
+                throw std::runtime_error(r.str());
+            reply c(r->element[0], false);
+            reply a(r->element[1], false);
+
+            for (int i = 0, n = a->elements; i < n; ++i)
+                std::clog << a->element[i]->str << std::endl;
+            return sstream_cast<long, std::string>(c->str);
         }
     }
 }

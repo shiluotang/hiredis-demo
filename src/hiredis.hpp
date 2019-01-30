@@ -6,9 +6,9 @@
 #include <map>
 #include <ctime>
 
-#include "optional.hpp"
-
 #include <hiredis/hiredis.h>
+
+#include "optional.hpp"
 
 namespace org {
     namespace sqg {
@@ -61,6 +61,8 @@ namespace org {
             int rpushx(std::string const &key, std::string const &value);
 
             int llen(std::string const &key);
+
+            long scan(long cursor, std::string const &pattern, int count);
 
         protected:
             ::redisReply* command(char const *fmt, ...);
