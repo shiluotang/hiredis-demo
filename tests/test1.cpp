@@ -21,7 +21,7 @@ int main(int argc, char* argv[]) try {
 
     hiredis redis("localhost", 6379);
     redis.auth("123");
-    map<string, string> const &almanacs = redis.hgetall("Key_gpsAlm");
+    map<string, string> const &almanacs = redis.hgetall("almanacs");
     for (map<string, string>::const_iterator it = almanacs.begin(); it != almanacs.end(); ++it)
         cout << it->first << " = " << it->second << endl;
     redis.set(KEY, VALUE).expire(KEY, static_cast<std::time_t>(1));

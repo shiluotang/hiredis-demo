@@ -1,12 +1,14 @@
 #include <cstdlib>
-#include <string>
-#include <algorithm>
-#include <map>
-#include <vector>
-#include <stdexcept>
 #include <cstdarg>
 
+#include <algorithm>
 #include <iostream>
+#include <map>
+#include <stdexcept>
+#include <string>
+#include <vector>
+
+#include <hiredis/hiredis.h>
 
 #include "misc.hpp"
 #include "hiredis.hpp"
