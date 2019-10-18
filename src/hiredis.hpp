@@ -5,8 +5,7 @@
 #include <string>
 #include <map>
 #include <ctime>
-
-#include <hiredis/hiredis.h>
+#include <memory>
 
 #include "optional.hpp"
 
@@ -16,7 +15,9 @@ namespace org {
         private:
             hiredis(hiredis const&);
         public:
-            hiredis(std::string const &host, unsigned short port);
+            hiredis(std::string const &host, unsigned short port,
+                    long connect_timeout_millis = 0,
+                    long socket_timeout_millis = 0);
 
             virtual ~hiredis();
 
@@ -64,10 +65,10 @@ namespace org {
 
             long scan(long cursor, std::string const &pattern, int count);
 
-        protected:
-            ::redisReply* command(char const *fmt, ...);
         private:
-            ::redisContext *_M_ctx;
+            struct impl_data;
+
+            std::auto_ptr<impl_data> _M_data;
         public:
             static std::string const OK;
         };

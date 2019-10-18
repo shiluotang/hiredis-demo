@@ -3,6 +3,7 @@
 #include <string>
 #include <stdexcept>
 
+// for usleep
 #include <unistd.h>
 
 #include "../src/hiredis.hpp"

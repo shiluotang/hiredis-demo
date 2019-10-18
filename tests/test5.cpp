@@ -14,7 +14,7 @@ int main(int argc, char const* argv[]) try {
     std::string const KEY = "loseyourmind";
     std::string const VALUE = "nonsense";
 
-    hiredis redis("localhost", 6379);
+    hiredis redis("localhost", 6379, 10000L, 10000L);
     redis.auth("123");
 
     long cursor = 0L;
