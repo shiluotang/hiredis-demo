@@ -20,7 +20,6 @@ LT_INIT
 
 # Checks for libraries.
 PKG_CHECK_MODULES([HIREDIS], [hiredis])
-PKG_CHECK_MODULES([CJSON], [libcjson])
 
 # Checks for header files.
 
