@@ -2,9 +2,10 @@
 #define HIREDIS_DEMO_HIREDIS_HPP_INCLUDED
 
 #include <cstdlib>
+#include <ctime>
+
 #include <string>
 #include <map>
-#include <ctime>
 #include <memory>
 
 #include "optional.hpp"
@@ -68,7 +69,12 @@ namespace org {
         private:
             struct impl_data;
 
+#if __cplusplus >= 201103L
+            std::unique_ptr<impl_data> _M_data;
+#else
             std::auto_ptr<impl_data> _M_data;
+#endif
+
         public:
             static std::string const OK;
         };

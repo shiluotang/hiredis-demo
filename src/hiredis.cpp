@@ -129,7 +129,11 @@ namespace org {
 
         hiredis::hiredis(std::string const &host, unsigned short port,
                 long connect_timeout, long socket_timeout) {
+#if __cplusplus >= 201103L
+            std::unique_ptr<impl_data> data;
+#else
             std::auto_ptr<impl_data> data;
+#endif
             if (connect_timeout > 0)
                 data.reset(new impl_data(::redisConnectWithTimeout(
                                 host.c_str(), port,
@@ -150,7 +154,7 @@ namespace org {
                     throw std::runtime_error(msg);
                 }
             }
-            _M_data = data;
+            _M_data.reset(data.release());
         }
 
         hiredis::~hiredis() {
