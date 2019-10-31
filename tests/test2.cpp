@@ -31,6 +31,8 @@ int main(int argc, char const* argv[]) try {
         throw std::runtime_error("key \"A\" does not exist!");
     cout << "[" << r << "]" << endl;
 
+    redis.del("A");
+    redis.del(KEY);
     return EXIT_SUCCESS;
 } catch (std::exception const &e) {
     std::cerr << "[C++ exception] " << e.what() << std::endl;

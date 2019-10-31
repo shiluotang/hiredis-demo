@@ -27,8 +27,6 @@ namespace {
         explicit reply(redisReply *reply, bool owner = true)
             :_M_reply(reply)
             , _M_owner(owner) {
-            if (!reply)
-                throw std::runtime_error("nil reply");
         }
 
         virtual ~reply() {
@@ -39,6 +37,8 @@ namespace {
                 }
             }
         }
+
+        operator bool() const { return !!_M_reply; }
 
         std::string str() const {
             return std::string(_M_reply->str, _M_reply->len);
@@ -124,6 +124,20 @@ namespace org {
                 return REDIS_OK == ::redisSetTimeout(_M_ctx, of_millis(millis));
             }
 
+            void check_reply(reply const &r) {
+                check_null_reply(r);
+                if (r.isError())
+                    throw std::runtime_error(r.str());
+            }
+
+            void check_null_reply(reply const &r) {
+                if (!r) {
+                    if (REDIS_OK != this->errcode())
+                        throw std::runtime_error(this->strerror());
+                    throw std::runtime_error("no redis reply!");
+                }
+            }
+
             ::redisContext *_M_ctx;
         };
 
@@ -163,7 +177,8 @@ namespace org {
 
         hiredis& hiredis::auth(std::string const &password) {
             reply r(_M_data->command("AUTH %s", password.c_str()));
-            if (r.isError() || !r.isOK())
+            _M_data->check_reply(r);
+            if (!r.isOK())
                 throw std::runtime_error(r.str());
             return *this;
         }
@@ -171,8 +186,7 @@ namespace org {
         std::map<std::string, std::string> hiredis::hgetall(std::string const& key) {
             std::map<std::string, std::string> m;
             reply r(_M_data->command("HGETALL %s", key.c_str()));
-            if (r.isError())
-                throw std::runtime_error(r.str());
+            _M_data->check_reply(r);
             for (size_t i = 0, n = r->elements; i != n; i += 2) {
                 reply rkey(r->element[i], false);
                 reply rval(r->element[i + 1], false);
@@ -185,15 +199,13 @@ namespace org {
 
         bool hiredis::exists(std::string const &key) {
             reply r(_M_data->command("EXISTS %s", key.c_str()));
-            if (r.isError())
-                throw std::runtime_error(r.str());
+            _M_data->check_reply(r);
             return r.isOne();
         }
 
         optional<std::string> hiredis::get(std::string const &key) {
             reply r(_M_data->command("GET %s", key.c_str()));
-            if (r.isError())
-                throw std::runtime_error(r.str());
+            _M_data->check_reply(r);
             if (r.isNil())
                 return optional<std::string>();
             return optional<std::string>(r.str());
@@ -202,8 +214,7 @@ namespace org {
         optional<std::string> hiredis::hget(std::string const &key,
                 std::string const &field) {
             reply r(_M_data->command("HGET %s %s", key.c_str(), field.c_str()));
-            if (r.isError())
-                throw std::runtime_error(r.str());
+            _M_data->check_reply(r);
             if (r.isNil())
                 return optional<std::string>();
             return optional<std::string>(r.str());
@@ -211,8 +222,7 @@ namespace org {
 
         hiredis& hiredis::set(std::string const &key, std::string const &value) {
             reply r(_M_data->command("SET %s %s", key.c_str(), value.c_str()));
-            if (r.isError())
-                throw std::runtime_error(r.str());
+            _M_data->check_reply(r);
             if (!r.isOK())
                 throw std::runtime_error("SET failed on key " + key);
             return *this;
@@ -222,23 +232,20 @@ namespace org {
                 std::string const &value) {
             reply r(_M_data->command("HSET %s %s %s", key.c_str(),
                         field.c_str(), value.c_str()));
-            if (r.isError())
-                throw std::runtime_error(r.str());
+            _M_data->check_reply(r);
             return *this;
         }
 
         bool hiredis::del(std::string const &key) {
             reply r(_M_data->command("DEL %s", key.c_str()));
-            if (r.isError())
-                throw std::runtime_error(r.str());
+            _M_data->check_reply(r);
             return r.isOne();
         }
 
         hiredis& hiredis::expire(std::string const &key, std::time_t duration) {
             reply r(_M_data->command("EXPIRE %s %d", key.c_str(),
                         static_cast<int>(duration)));
-            if (r.isError())
-                throw std::runtime_error(r.str());
+            _M_data->check_reply(r);
             if (!r.isOne())
                 throw std::runtime_error("EXPIRE failed on key " + key);
             return *this;
@@ -248,8 +255,7 @@ namespace org {
                 std::time_t timepoint) {
             reply r(_M_data->command("EXPIREAT %s %d", key.c_str(),
                         static_cast<int>(timepoint)));
-            if (r.isError())
-                throw std::runtime_error(r.str());
+            _M_data->check_reply(r);
             if (!r.isOne())
                 throw std::runtime_error("EXPIREAT failed on key " + key);
             return *this;
@@ -257,8 +263,7 @@ namespace org {
 
         bool hiredis::persist(std::string const &key) {
             reply r(_M_data->command("PERSIST %s", key.c_str()));
-            if (r.isError())
-                throw std::runtime_error(r.str());
+            _M_data->check_reply(r);
             return r->integer > 0;
         }
 
@@ -266,29 +271,25 @@ namespace org {
                 int delta) {
             reply r(_M_data->command("HINCRBY %s %s %d", key.c_str(),
                         field.c_str(), delta));
-            if (r.isError())
-                throw std::runtime_error(r.str());
+            _M_data->check_reply(r);
             return r->integer;
         }
 
         int hiredis::incrby(std::string const &key, int delta) {
             reply r(_M_data->command("INCRBY %s %d", key.c_str(), delta));
-            if (r.isError())
-                throw std::runtime_error(r.str());
+            _M_data->check_reply(r);
             return r->integer;
         }
 
         int hiredis::ttl(std::string const &key) {
             reply r(_M_data->command("TTL %s", key.c_str()));
-            if (r.isError())
-                throw std::runtime_error(r.str());
+            _M_data->check_reply(r);
             return r->integer;
         }
 
         optional<std::string> hiredis::lpop(std::string const &key) {
             reply r(_M_data->command("LPOP %s", key.c_str()));
-            if (r.isError())
-                throw std::runtime_error(r.str());
+            _M_data->check_reply(r);
             if (r.isNil())
                 return optional<std::string>();
             return optional<std::string>(r.str());
@@ -297,23 +298,20 @@ namespace org {
         int hiredis::lpush(std::string const &key, std::string const &value) {
             reply r(_M_data->command("LPUSH %s %s", key.c_str(),
                         value.c_str()));
-            if (r.isError())
-                throw std::runtime_error(r.str());
+            _M_data->check_reply(r);
             return static_cast<int>(r->integer);
         }
 
         int hiredis::lpushx(std::string const &key, std::string const &value) {
             reply r(_M_data->command("LPUSHX %s %s", key.c_str(),
                         value.c_str()));
-            if (r.isError())
-                throw std::runtime_error(r.str());
+            _M_data->check_reply(r);
             return static_cast<int>(r->integer);
         }
 
         optional<std::string> hiredis::rpop(std::string const &key) {
             reply r(_M_data->command("RPOP %s", key.c_str()));
-            if (r.isError())
-                throw std::runtime_error(r.str());
+            _M_data->check_reply(r);
             if (r.isNil())
                 return optional<std::string>();
             return optional<std::string>(r.str());
@@ -322,37 +320,42 @@ namespace org {
         int hiredis::rpush(std::string const &key, std::string const &value) {
             reply r(_M_data->command("RPUSH %s %s", key.c_str(),
                         value.c_str()));
-            if (r.isError())
-                throw std::runtime_error(r.str());
+            _M_data->check_reply(r);
             return static_cast<int>(r->integer);
         }
 
         int hiredis::rpushx(std::string const &key, std::string const &value) {
             reply r(_M_data->command("RPUSHX %s %s", key.c_str(),
                         value.c_str()));
-            if (r.isError())
-                throw std::runtime_error(r.str());
+            _M_data->check_reply(r);
             return static_cast<int>(r->integer);
         }
 
         int hiredis::llen(std::string const &key) {
             reply r(_M_data->command("LLEN %s", key.c_str()));
-            if (r.isError())
-                throw std::runtime_error(r.str());
+            _M_data->check_reply(r);
             return static_cast<int>(r->integer);
         }
 
         long hiredis::scan(long cursor, std::string const &pattern, int count) {
             reply r(_M_data->command("SCAN %ld MATCH %s COUNT %d", cursor,
                         pattern.c_str(), count));
-            if (r.isError())
-                throw std::runtime_error(r.str());
+            _M_data->check_reply(r);
             reply c(r->element[0], false);
             reply a(r->element[1], false);
 
             for (int i = 0, n = a->elements; i < n; ++i)
                 std::clog << a->element[i]->str << std::endl;
             return sstream_cast<long, std::string>(c->str);
+        }
+
+        std::set<std::string> hiredis::keys(std::string const &pattern) {
+            reply r(_M_data->command("KEYS %s", pattern.c_str()));
+            _M_data->check_reply(r);
+            std::set<std::string> s;
+            for (int i = 0, n = r->elements; i < n; ++i)
+                s.insert(r->element[i]->str);
+            return s;
         }
     }
 }

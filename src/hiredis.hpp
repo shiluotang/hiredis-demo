@@ -7,6 +7,7 @@
 #include <string>
 #include <map>
 #include <memory>
+#include <set>
 
 #include "optional.hpp"
 
@@ -65,6 +66,8 @@ namespace org {
             int llen(std::string const &key);
 
             long scan(long cursor, std::string const &pattern, int count);
+
+            std::set<std::string> keys(std::string const &pattern);
 
         private:
             struct impl_data;
