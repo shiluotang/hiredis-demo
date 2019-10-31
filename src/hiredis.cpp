@@ -92,7 +92,7 @@ namespace org {
             impl_data(::redisContext *ctx = NULL): _M_ctx(ctx) {}
 
             virtual ~impl_data() {
-                if (!_M_ctx) {
+                if (_M_ctx) {
                     ::redisFree(_M_ctx);
                     _M_ctx = NULL;
                 }
@@ -144,11 +144,11 @@ namespace org {
                 throw std::runtime_error("failed to connect to "
                         + host + ":" + sstream_cast<std::string>(port));
             if (REDIS_OK != data->errcode())
-                throw std::runtime_error(_M_data->strerror());
+                throw std::runtime_error(data->strerror());
 
             if (socket_timeout > 0) {
                 if (!data->set_socket_timeout(socket_timeout)) {
-                    std::string msg("Can't set socket timeout!");
+                    std::string msg("can't set socket timeout!");
                     if (data->errcode())
                         msg = data->strerror();
                     throw std::runtime_error(msg);
