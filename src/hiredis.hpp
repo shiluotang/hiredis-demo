@@ -67,6 +67,10 @@ namespace org {
 
             long scan(long cursor, std::string const &pattern, int count);
 
+            std::string scan(std::string const &cursor,
+                    std::string const &pattern, int count,
+                    std::set<std::string> &s);
+
             std::set<std::string> keys(std::string const &pattern);
 
         private:

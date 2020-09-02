@@ -343,10 +343,26 @@ namespace org {
             _M_data->check_reply(r);
             reply c(r->element[0], false);
             reply a(r->element[1], false);
+            std::set<std::string> keys;
 
-            for (int i = 0, n = a->elements; i < n; ++i)
+            for (int i = 0, n = a->elements; i < n; ++i) {
                 std::clog << a->element[i]->str << std::endl;
+                keys.insert(a->element[i]->str);
+            }
             return sstream_cast<long, std::string>(c->str);
+        }
+
+        std::string hiredis::scan(std::string const &cursor,
+                std::string const &pattern, int count,
+                std::set<std::string> &s) {
+            reply r(_M_data->command("SCAN %s MATCH %s COUNT %d",
+                        cursor.c_str(), pattern.c_str(), count));
+            _M_data->check_reply(r);
+            reply c(r->element[0], false);
+            reply a(r->element[1], false);
+            for (int i = 0, n = a->elements; i < n; ++i)
+                s.insert(a->element[i]->str);
+            return c->str;
         }
 
         std::set<std::string> hiredis::keys(std::string const &pattern) {

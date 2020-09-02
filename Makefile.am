@@ -36,4 +36,12 @@ check_PROGRAMS += test5
 test5_SOURCES	= ./tests/test5.cpp
 test5_LDADD     = libhiredisxx.la
 
+check_PROGRAMS += test-socket-timeout
+test_socket_timeout_SOURCES = ./tests/test-socket-timeout.cpp
+test_socket_timeout_LDADD 	= libhiredisxx.la
+
+check_PROGRAMS += test-export-mcc
+test_export_mcc_SOURCES = ./tests/test-export-mcc.cpp
+test_export_mcc_LDADD 	= libhiredisxx.la
+
 TESTS = $(check_PROGRAMS)
